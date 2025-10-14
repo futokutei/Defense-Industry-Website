@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Додати новий слайд</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+      {{ form.img_file.label(class="form-label") }}
+      {{ form.img_file(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.desc.label(class="form-label") }}
+      {{ form.desc(class="form-control", rows=3) }}
+    </div>
+    <div class="mb-3">
+      {{ form.text_position.label(class="form-label") }}
+      {{ form.text_position(class="form-select") }}
+    </div>
+    <div class="mb-3">
+      {{ form.button_text.label(class="form-label") }}
+      {{ form.button_text(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.button_link.label(class="form-label") }}
+      {{ form.button_link(class="form-control") }}
+    </div>
+    {{ form.submit(class="btn btn-success") }}
+    <a href="{{ url_for('admin_carousel') }}" class="btn btn-secondary">Назад</a>
+  </form>
+</div>
+{% endblock %}
