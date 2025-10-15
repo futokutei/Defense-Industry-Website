@@ -2,20 +2,16 @@
 {% block content %}
 <div class="container-fluid">
   <div class="row">
-    <!-- Бокова панель -->
     {% include "admin_sidebar.html" %}
 
-    <!-- Основна панель -->
     <div class="col-md-9 col-lg-10 p-4">
-      <h3 class="mb-4">Список адміністраторів</h3>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Список адміністраторів</h3>
+        {% if current_user.is_superadmin %}
+        <a href="{{ url_for('add_admin') }}" class="btn btn-success">Додати адміністратора</a>
+        {% endif %}
+      </div>
 
-      <!-- Пошук -->
-      <form method="GET" class="mb-3 d-flex">
-        <input type="text" name="q" class="form-control me-2" placeholder="Пошук адміністраторів..." value="{{ request.args.get('q', '') }}">
-        <button class="btn btn-primary">Пошук</button>
-      </form>
-
-      <!-- Таблиця адміністраторів -->
       <table class="table table-hover">
         <thead>
           <tr>
@@ -23,6 +19,8 @@
             <th>Ім'я</th>
             <th>Логін</th>
             <th>Пошта</th>
+            <th>Роль</th>
+            <th class="text-end">Дії</th>
           </tr>
         </thead>
         <tbody>
@@ -32,10 +30,30 @@
             <td>{{ a.name }}</td>
             <td>{{ a.username }}</td>
             <td>{{ a.email }}</td>
+            <td>
+              {% if a.is_superadmin %}
+                <span class="badge bg-primary">Суперадмін</span>
+              {% else %}
+                <span class="badge bg-secondary">Адмін</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              {% if current_user.is_superadmin %}
+                <a href="{{ url_for('edit_admin', admin_id=a.id) }}" class="btn btn-warning btn-sm">Редагувати</a>
+                
+                {% if not a.is_superadmin and a.id != current_user.id %}
+                <form action="{{ url_for('delete_admin', admin_id=a.id) }}" method="POST" class="d-inline ms-1">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ви впевнені, що хочете видалити цього адміністратора?')">
+                    Видалити
+                  </button>
+                </form>
+                {% endif %}
+              {% endif %}
+            </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="4" class="text-center">Адміністратори не знайдені</td>
+            <td colspan="6" class="text-center">Адміністратори не знайдені</td>
           </tr>
           {% endfor %}
         </tbody>
