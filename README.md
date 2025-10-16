@@ -14,7 +14,7 @@ A **Flask** web application for showcasing defense industry products, featuring 
 
 This guide will help you **download, configure, and run** the web application locally.
 
-### 🔹 Step 1: Clone the Repository
+###  Step 1: Clone the Repository
 
 Clone the project files from GitHub to your computer:
 
@@ -30,7 +30,7 @@ cd Defense-Industry-Website
 
 ---
 
-### 🔹 Step 2: Create and Activate a Virtual Environment
+###  Step 2: Create and Activate a Virtual Environment
 
 A virtual environment is used to isolate the project’s dependencies.
 
