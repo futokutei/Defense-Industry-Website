@@ -5,7 +5,6 @@ A **Flask** web application for showcasing defense industry products, featuring 
 ---
 
 ##  Screenshot
-> Add the `screenshot.png` file to the root directory of the repository to display it here.
 
 ![Screenshot](./screenshot.png)
 
@@ -134,7 +133,6 @@ You are free to use, modify, and share the code with proper attribution.
 ---
 
 ##  Знімок екрана
-> Додайте файл `screenshot.png` у кореневу директорію репозиторію, щоб побачити знімок тут.
 
 ![Screenshot](./screenshot.png)
 
