@@ -222,7 +222,7 @@ def delete_admin(admin_id):
     
     admin_to_delete = User.query.get_or_404(admin_id)
     
-    if admin_to_delete.is_superuser:
+    if admin_to_delete.is_superadmin:
         flash('Неможливо видалити обліковий запис суперадміністратора.', 'danger')
         return redirect(url_for('admin_list'))
 
