@@ -43,7 +43,7 @@ python -m venv venv
 
 For **Windows**:
 ```bash
-.\env\Scripts\activate
+.\venv\Scripts\activate
 ```
 
 For **macOS / Linux**:
@@ -171,7 +171,7 @@ python -m venv venv
 
 Для **Windows**:
 ```bash
-.\env\Scripts\ctivate
+.\venv\Scripts\ctivate
 ```
 
 Для **macOS / Linux**:
