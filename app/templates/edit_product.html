@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Редагування продукту: {{ product.name }}</h2>
+  <form method="POST" enctype="multipart/form-data">
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+          {{ form.name.label(class="form-label") }}
+          {{ form.name(class="form-control") }}
+      </div>
+      <div class="mb-3">
+          {{ form.desc.label(class="form-label") }}
+          {{ form.desc(class="form-control", rows=4) }}
+      </div>
+      <div class="mb-3">
+          {{ form.img_file.label(class="form-label") }} (Завантажте, щоб змінити)
+          {{ form.img_file(class="form-control") }}
+          {% if product.img %}
+          <small>Поточне зображення:</small><br>
+          <img src="{{ url_for('static', filename='img/' + product.img) }}" alt="{{ product.name }}" style="max-width: 200px; margin-top: 10px;">
+          {% endif %}
+      </div>
+      {{ form.submit(class="btn btn-success") }}
+      <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">Назад</a>
+  </form>
+</div>
+{% endblock %}

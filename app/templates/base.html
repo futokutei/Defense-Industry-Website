@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>prod.nexus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold " href="{{ url_for('main.index') }}" margin-right="0">prod.nexus</a>     
+               
+            <a class="navbar-brand fw-bold me-5" href="{{ url_for('main.index') }}"> 
+                <img src="{{ url_for('static', filename='img/logo/wlogo.png') }}" alt="Logo" height="20">
+            </a>     
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+                    aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item px-3">
+                        <a class="nav-link text-light" href="{{ url_for('main.index') }}">Головна</a>
+                    </li>
+                    <li class="nav-item px-3">
+                        <a class="nav-link text-light" href="{{ url_for('main.products_page') }}">Продукція</a>
+                    </li>
+                    <li class="nav-item px-3">
+                        {% if current_user.is_authenticated %}
+                            <a class="nav-link text-light" href="{{ url_for('admin.admin_dashboard') }}">Адмін Панель</a>
+                        {% else %}
+                            <a class="nav-link text-light" href="{{ url_for('admin.login') }}">Адмін</a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% block header %}{% endblock %}
+
+    <main class="flex-fill container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-dark text-light text-center py-3 mt-auto">
+        © 2025 prod.nexus. Всі права захищені.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
