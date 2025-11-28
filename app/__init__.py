@@ -17,4 +17,7 @@ def create_app():
     app.register_blueprint(main)
     app.register_blueprint(admin)
 
+    from app.api import api
+    app.register_blueprint(api)
+
     return app

@@ -1,0 +1,163 @@
+openapi: 3.0.0
+info:
+  title: Prod.Nexus API
+  description: API для керування каталогом продукції
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:5000/api
+paths:
+  /health:
+    get:
+      summary: Перевірка працездатності
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /products:
+    get:
+      summary: Отримати список продуктів
+      responses:
+        '200':
+          description: Успішна відповідь
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDTO'
+    post:
+      summary: Створити новий продукт
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Продукт створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '400':
+          description: Помилка валідації
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/{id}:
+    get:
+      summary: Отримати продукт по ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Деталі продукту
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '404':
+          description: Продукт не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Оновити продукт
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Продукт оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        '404':
+          description: Продукт не знайдено
+
+    delete:
+      summary: Видалити продукт
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Продукт видалено
+        '404':
+          description: Продукт не знайдено
+
+components:
+  schemas:
+    ProductDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        desc:
+          type: string
+        img:
+          type: string
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - desc
+      properties:
+        name:
+          type: string
+        desc:
+          type: string
+        img:
+          type: string
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        desc:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
