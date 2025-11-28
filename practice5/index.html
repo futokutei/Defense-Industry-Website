@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resilience Demo</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        button { padding: 0.5rem 1rem; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        #degraded-banner { display: none; background: #ffc107; padding: 1rem; margin-bottom: 1rem; text-align: center; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div id="degraded-banner">⚠️ System Overloaded. Please wait.</div>
+    <div class="card">
+        <h2>🛍️ Create Order</h2>
+        <input type="text" id="title" value="FPV Drone V7 (Thermal)">
+        <button id="submit-btn" onclick="submitOrder()">Order (POST)</button>
+    </div>
+    <div class="card"><div id="logs"></div></div>
+
+<script type="module">
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const backoff = (base, attempt) => base * (2 ** attempt) + Math.floor(Math.random() * 200);
+
+    async function getOrReuseKey(payload) {
+        const msg = JSON.stringify(payload);
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+        const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+        return localStorage.getItem(`idem:${hash}`) || (localStorage.setItem(`idem:${hash}`, crypto.randomUUID()), localStorage.getItem(`idem:${hash}`));
+    }
+
+    async function fetchWithResilience(url, opts = {}) {
+        const { retry = {}, idempotencyKey, requestId, ...init } = opts;
+        const { retries = 3, baseDelayMs = 500, timeoutMs = 3000 } = retry;
+        const headers = new Headers(init.headers || {});
+        headers.set("Content-Type", "application/json");
+        if (idempotencyKey) headers.set("Idempotency-Key", idempotencyKey);
+        headers.set("X-Request-Id", requestId ?? crypto.randomUUID());
+
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+            log(`Attempt...`);
+            const res = await fetch(url, { ...init, headers, signal: controller.signal });
+            clearTimeout(tid);
+
+            if (res.status === 429 && retries > 0) {
+                const wait = (parseInt(res.headers.get("Retry-After") || 1) * 1000);
+                log(`Wait ${wait}ms (429)...`, 'warn');
+                triggerDegraded(true);
+                await sleep(wait);
+                return fetchWithResilience(url, { ...opts, retry: { ...retry, retries: retries - 1 } });
+            }
+            if (res.status >= 500 && retries > 0) {
+                const wait = backoff(baseDelayMs, opts.__a || 0);
+                log(`Retry in ${wait}ms (5xx)...`, 'warn');
+                await sleep(wait);
+                return fetchWithResilience(url, { ...opts, __a: (opts.__a||0)+1, retry: { ...retry, retries: retries - 1 } });
+            }
+            if(res.ok) triggerDegraded(false);
+            return res;
+        } catch (e) {
+            clearTimeout(tid);
+            if (retries > 0) {
+                const wait = backoff(baseDelayMs, opts.__a || 0);
+                log(`Retry in ${wait}ms (Net/Timeout)...`, 'err');
+                triggerDegraded(true);
+                await sleep(wait);
+                return fetchWithResilience(url, { ...opts, __a: (opts.__a||0)+1, retry: { ...retry, retries: retries - 1 } });
+            }
+            throw e;
+        }
+    }
+
+    let fails = 0;
+    function triggerDegraded(active) {
+        fails = active ? fails + 1 : 0;
+        const banner = document.getElementById('degraded-banner');
+        const btn = document.getElementById('submit-btn');
+        if (fails >= 2) {
+            banner.style.display = 'block';
+            btn.disabled = true;
+            setTimeout(() => { banner.style.display = 'none'; btn.disabled = false; fails=0; }, 5000);
+        }
+    }
+
+    window.submitOrder = async () => {
+        const payload = { title: document.getElementById('title').value };
+        const key = await getOrReuseKey(payload);
+        try {
+            const res = await fetchWithResilience("http://localhost:8081/orders", {
+                method: "POST",
+                body: JSON.stringify(payload),
+                idempotencyKey: key
+            });
+            const data = await res.json();
+            log(`Done: ${res.status}. ID: ${data.id}`);
+        } catch (e) { log(`Error: ${e.message}`, 'err'); }
+    };
+
+    function log(m, t) {
+        const d = document.createElement('div');
+        d.textContent = m;
+        d.style.color = t==='err'?'red':t==='warn'?'orange':'black';
+        document.getElementById('logs').prepend(d);
+    }
+</script>
+</body>
+</html>
