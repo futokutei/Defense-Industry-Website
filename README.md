@@ -111,6 +111,42 @@ You should see the homepage of your website.
 
 ---
 
+##   API Documentation
+
+### Creating products validation
+
+![Create product](./docs/api/create_product.png)
+
+### Deleting products validation
+
+![Delete product](./docs/api/delete_product.png)
+
+### Getting products validation
+
+![Get product](./docs/api/get_product.png)
+
+### Creating products ID validation
+
+![Get product ID](./docs/api/get_product_id.png)
+
+### Checking health validation
+
+![Check health](./docs/api/health.png)
+
+### Updating products validation
+
+![Update product](./docs/api/update_product.png)
+
+### Licensed image
+
+![Licensed image](./docs/api/licensed-image.png)
+
+### YAML-file
+
+![YAML-file](./docs/api/openapi.yaml)
+
+---
+
 ##  License
 
 This project is open-source and distributed under the **MIT License**.  
@@ -236,6 +272,42 @@ python app.py
 - **SQLite**
 - **HTML / CSS / JS (Bootstrap)**
 - **WTForms, Flask-Login, SQLAlchemy**
+
+---
+
+##   API документація
+
+### Валідація створення продукту
+
+![Create product](./docs/api/create_product.png)
+
+### Валідація видалення продукту
+
+![Delete product](./docs/api/delete_product.png)
+
+### Валідація отримання продукту
+
+![Get product](./docs/api/get_product.png)
+
+### Валідація отримання ідентифікатора продукту
+
+![Get product ID](./docs/api/get_product_id.png)
+
+### Валідація перевірки стану
+
+![Check health](./docs/api/health.png)
+
+### Валідація оновлення продукту
+
+![Update product](./docs/api/update_product.png)
+
+### Licensed image
+
+![Licensed image](./docs/api/licensed-image.png)
+
+### YAML-файл
+
+![YAML-file](./docs/api/openapi.yaml)
 
 ---
 
