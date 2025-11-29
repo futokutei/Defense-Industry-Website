@@ -307,7 +307,7 @@ python app.py
 
 ### YAML-файл
 
-![YAML-file](./docs/api/openapi.yaml)
+[YAML-file](./docs/api/openapi.yaml)
 
 ---
 
