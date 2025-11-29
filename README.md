@@ -139,11 +139,11 @@ You should see the homepage of your website.
 
 ### Licensed image
 
-![Licensed image](./docs/api/licensed-image.png)
+![Licensed image](./docs/api/licensed-image.jpg)
 
 ### YAML-file
 
-![YAML-file](./docs/api/openapi.yaml)
+[YAML-file](./docs/api/openapi.yaml)
 
 ---
 
@@ -303,11 +303,11 @@ python app.py
 
 ### Licensed image
 
-![Licensed image](./docs/api/licensed-image.png)
+![Licensed image](./docs/api/licensed-image.jpg)
 
 ### YAML-файл
 
-![YAML-file](./docs/api/openapi.yaml)
+[YAML-file](./docs/api/openapi.yaml)
 
 ---
 
