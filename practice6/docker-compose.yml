@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  web:
+    image: myapp-web:1.0.0
+    container_name: web
+    ports:
+      ["3000:80"]
+    depends_on:
+      - api
+  api:
+    image: myapp-py2:1.0.0
+    container_name: api
+    ports:
+      ["8080:8080"]
+    environment:
+      PORT: "8080"
+      DB_URL: "postgresql://postgres:example@db:5432/appdb"
+    depends_on:
+      - db
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    environment:
+
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: appdb
+    ports:
+      ["5432:5432"]
