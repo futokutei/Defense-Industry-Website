@@ -2,28 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Resilience Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resilience CRUD Demo</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-        .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }
-        button { padding: 0.5rem 1rem; background: #007bff; color: white; border: none; cursor: pointer; }
-        button:disabled { background: #ccc; }
-        #degraded-banner { display: none; background: #ffc107; padding: 1rem; margin-bottom: 1rem; text-align: center; font-weight: bold;}
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 0.5rem 1rem; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button.delete { background: #dc3545; padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-left: 10px;}
+        button.refresh { background: #17a2b8; margin-bottom: 10px;}
+        input { padding: 0.5rem; width: 50%; font-size: 1rem; }
+        
+        #degraded-banner { display: none; background-color: #ffc107; color: #856404; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; text-align: center; font-weight: bold; }
+        .item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
-    <div id="degraded-banner">⚠️ System Overloaded. Please wait.</div>
+
+    <div id="degraded-banner">⚠️ Система перевантажена. Функціонал обмежено.</div>
+
     <div class="card">
-        <h2>🛍️ Create Order</h2>
-        <input type="text" id="title" value="FPV Drone V7 (Thermal)">
-        <button id="submit-btn" onclick="submitOrder()">Order (POST)</button>
+        <h2>1. POST: Створити</h2>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="title" value="FPV Drone V7 (Thermal)">
+            <button id="submit-btn" onclick="submitOrder()">Order (POST)</button>
+        </div>
     </div>
-    <div class="card"><div id="logs"></div></div>
+
+    <div class="card">
+        <h2>2. GET & DELETE: Список</h2>
+        <button class="refresh" onclick="fetchList()">🔄 Оновити список (GET)</button>
+        <div id="list-container">Натисни "Оновити", щоб завантажити...</div>
+    </div>
+
+    <div class="card">
+        <h3>Logs</h3>
+        <button onclick="document.getElementById('logs').innerHTML=''" style="background: #6c757d; font-size: 0.8rem;">Clear</button>
+        <div id="logs"></div>
+    </div>
 
 <script type="module">
+    // --- UTILS & CONFIG ---
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const backoff = (base, attempt) => base * (2 ** attempt) + Math.floor(Math.random() * 200);
 
+    // --- IDEMPOTENCY KEY GEN ---
     async function getOrReuseKey(payload) {
         const msg = JSON.stringify(payload);
         const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
@@ -31,9 +53,11 @@
         return localStorage.getItem(`idem:${hash}`) || (localStorage.setItem(`idem:${hash}`, crypto.randomUUID()), localStorage.getItem(`idem:${hash}`));
     }
 
+    // --- RESILIENT FETCH (CORE LOGIC) ---
     async function fetchWithResilience(url, opts = {}) {
         const { retry = {}, idempotencyKey, requestId, ...init } = opts;
         const { retries = 3, baseDelayMs = 500, timeoutMs = 3000 } = retry;
+
         const headers = new Headers(init.headers || {});
         headers.set("Content-Type", "application/json");
         if (idempotencyKey) headers.set("Idempotency-Key", idempotencyKey);
@@ -43,30 +67,34 @@
         const tid = setTimeout(() => controller.abort(), timeoutMs);
 
         try {
-            log(`Attempt...`);
+            log(`📡 ${init.method || 'GET'} request...`);
             const res = await fetch(url, { ...init, headers, signal: controller.signal });
             clearTimeout(tid);
 
+            // Rate Limit Logic (429)
             if (res.status === 429 && retries > 0) {
                 const wait = (parseInt(res.headers.get("Retry-After") || 1) * 1000);
-                log(`Wait ${wait}ms (429)...`, 'warn');
+                log(`⏳ 429 Rate Limit. Waiting ${wait}ms...`, 'warn');
                 triggerDegraded(true);
                 await sleep(wait);
                 return fetchWithResilience(url, { ...opts, retry: { ...retry, retries: retries - 1 } });
             }
+            // Server Error Logic (5xx)
             if (res.status >= 500 && retries > 0) {
                 const wait = backoff(baseDelayMs, opts.__a || 0);
-                log(`Retry in ${wait}ms (5xx)...`, 'warn');
+                log(`🔥 ${res.status} Error. Retrying in ${wait}ms...`, 'warn');
                 await sleep(wait);
                 return fetchWithResilience(url, { ...opts, __a: (opts.__a||0)+1, retry: { ...retry, retries: retries - 1 } });
             }
+            
             if(res.ok) triggerDegraded(false);
             return res;
+
         } catch (e) {
             clearTimeout(tid);
             if (retries > 0) {
                 const wait = backoff(baseDelayMs, opts.__a || 0);
-                log(`Retry in ${wait}ms (Net/Timeout)...`, 'err');
+                log(`🛑 Network/Timeout. Retrying in ${wait}ms...`, 'err');
                 triggerDegraded(true);
                 await sleep(wait);
                 return fetchWithResilience(url, { ...opts, __a: (opts.__a||0)+1, retry: { ...retry, retries: retries - 1 } });
@@ -75,18 +103,18 @@
         }
     }
 
+    // --- UI FUNCTIONS ---
     let fails = 0;
     function triggerDegraded(active) {
         fails = active ? fails + 1 : 0;
         const banner = document.getElementById('degraded-banner');
-        const btn = document.getElementById('submit-btn');
         if (fails >= 2) {
             banner.style.display = 'block';
-            btn.disabled = true;
-            setTimeout(() => { banner.style.display = 'none'; btn.disabled = false; fails=0; }, 5000);
+            setTimeout(() => { banner.style.display = 'none'; fails=0; }, 5000);
         }
     }
 
+    // 1. POST
     window.submitOrder = async () => {
         const payload = { title: document.getElementById('title').value };
         const key = await getOrReuseKey(payload);
@@ -97,15 +125,53 @@
                 idempotencyKey: key
             });
             const data = await res.json();
-            log(`Done: ${res.status}. ID: ${data.id}`);
-        } catch (e) { log(`Error: ${e.message}`, 'err'); }
+            log(`✅ POST Done: ${res.status}. ID: ${data.id}`, 'success');
+            fetchList(); // Автоматично оновлюємо список
+        } catch (e) { log(`❌ POST Failed: ${e.message}`, 'err'); }
     };
 
-    function log(m, t) {
-        const d = document.createElement('div');
-        d.textContent = m;
-        d.style.color = t==='err'?'red':t==='warn'?'orange':'black';
-        document.getElementById('logs').prepend(d);
+    // 2. GET
+    window.fetchList = async () => {
+        try {
+            const res = await fetchWithResilience("http://localhost:8081/orders", { method: "GET" });
+            if (!res.ok) throw new Error(res.status);
+            const list = await res.json();
+            
+            const container = document.getElementById('list-container');
+            container.innerHTML = list.length ? '' : 'Список порожній';
+            
+            list.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `
+                    <span><b>${item.title}</b> <small>(${item.id})</small></span>
+                    <button class="delete" onclick="deleteOrder('${item.id}')">Delete</button>
+                `;
+                container.appendChild(div);
+            });
+            log(`✅ GET List loaded (${list.length} items)`, 'success');
+        } catch (e) { log(`❌ GET Failed: ${e.message}`, 'err'); }
+    }
+
+    // 3. DELETE
+    window.deleteOrder = async (id) => {
+        if(!confirm('Delete?')) return;
+        try {
+            const res = await fetchWithResilience(`http://localhost:8081/orders/${id}`, { method: "DELETE" });
+            if (res.status === 204) {
+                log(`🗑️ DELETE Success (204)`, 'success');
+                fetchList(); // Оновити список
+            } else {
+                log(`⚠️ DELETE Failed: ${res.status}`, 'err');
+            }
+        } catch (e) { log(`❌ DELETE Error: ${e.message}`, 'err'); }
+    }
+
+    function log(m, t) { 
+        const d = document.createElement('div'); 
+        d.textContent = `[${new Date().toLocaleTimeString()}] ${m}`; 
+        d.style.color = t==='err'?'red':t==='warn'?'orange':t==='success'?'green':'black';
+        document.getElementById('logs').prepend(d); 
     }
 </script>
 </body>
