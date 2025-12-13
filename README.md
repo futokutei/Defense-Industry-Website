@@ -146,7 +146,34 @@ You should see the homepage of your website.
 [YAML-file](./docs/api/openapi.yaml)
 
 ---
+## CI/CD Status
 
+![Workflow status](https://github.com/futokutei/Defense-Industry-Website/actions/workflows/ci.yml/badge.svg)
+
+---
+
+## Choosing type of Delivery
+
+For Delivery we choose GHCR method
+
+[Container link](https://github.com/users/futokutei/packages/container/package/defense-industry-website)
+
+---
+
+## How to install(Docker)
+
+Use this link to install image from comand line:
+
+```
+docker pull ghcr.io/futokutei/defense-industry-website:latest
+```
+
+OR use this line to use it like basic image in Dockerfile:
+``` 
+FROM ghcr.io/futokutei/defense-industry-website:latest
+```
+
+---
 ##  License
 
 This project is open-source and distributed under the **MIT License**.  
@@ -157,7 +184,7 @@ You are free to use, modify, and share the code with proper attribution.
 ##  Authors
 
 **[rxniray](https://github.com/rxniray)**  
-**[Futokutei](https://github.com/Qwertine11)**  
+**[Futokutei](https://github.com/futokutei)**  
 
 > If you have any questions or suggestions — feel free to create an *Issue* or *Pull Request* 
 
@@ -310,6 +337,32 @@ python app.py
 [YAML-file](./docs/api/openapi.yaml)
 
 ---
+## Стан CI/CD
+
+![Workflow status](https://github.com/futokutei/Defense-Industry-Website/actions/workflows/ci.yml/badge.svg)
+
+---
+
+## Обраний підхід Delivery
+
+Для Delivery було обрано варіант через GHCR
+
+[Посилання на зібраний контейнер](https://github.com/users/futokutei/packages/container/package/defense-industry-website)
+
+---
+
+## Як встановити(Docker)
+
+Використовуйте це, щоб встановити образ через командний рядок:
+
+```
+docker pull ghcr.io/futokutei/defense-industry-website:latest
+```
+
+ЧИ використовуйте це, щоб використовувати образ, як базовий:
+``` 
+FROM ghcr.io/futokutei/defense-industry-website:latest
+```
 
 ## Ліцензія
 
@@ -321,6 +374,6 @@ python app.py
 ##  Автори
 
 **[rxniray](https://github.com/rxniray)**  
-**[Futokutei](https://github.com/Qwertine11)**  
+**[Futokutei](https://github.com/futokutei)**  
 
 > Якщо у вас є питання або пропозиції — створіть *Issue* або *Pull Request* 
